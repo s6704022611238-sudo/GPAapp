@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GPA Calculator — คำนวณและวางแผนเกรดเฉลี่ย</title>
+    <style>
+      :root {
+        --bg: #f1f5f9;
+        --surface: #ffffff;
+        --surface-2: #f8fafc;
+        --border: #e2e8f0;
+        --text: #1e293b;
+        --text-muted: #64748b;
+        --primary: #2563eb;
+        --primary-light: #dbeafe;
+        --primary-dark: #1d4ed8;
+        --accent: #0ea5e9;
+        --success: #16a34a;
+        --success-light: #dcfce7;
+        --warning: #f59e0b;
+        --warning-light: #fef3c7;
+        --error: #dc2626;
+        --error-light: #fee2e2;
+        --radius: 14px;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+        --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.08);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .container {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 4rem;
+      }
+
+      /* Header */
+      .header {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .header h1 {
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: var(--text);
+        letter-spacing: -0.02em;
+        margin-bottom: 0.35rem;
+      }
+
+      .header p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+      }
+
+      /* Summary cards */
+      .summary {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1.75rem;
+      }
+
+      .summary-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.5rem 1.25rem;
+        text-align: center;
+        box-shadow: var(--shadow);
+        transition: box-shadow 0.2s;
+      }
+
+      .summary-card:hover {
+        box-shadow: var(--shadow-lg);
+      }
+
+      .summary-card .label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+      }
+
+      .summary-card .value {
+        font-size: 2.4rem;
+        font-weight: 700;
+        line-height: 1.1;
+        color: var(--primary);
+      }
+
+      .summary-card .sub {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        margin-top: 0.3rem;
+      }
+
+      /* Card sections */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow);
+      }
+
+      .card h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 1.25rem;
+        color: var(--text);
+      }
+
+      /* Form */
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr auto auto auto;
+        gap: 0.75rem;
+        align-items: end;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+
+      .field label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      input[type="text"],
+      select {
+        font-family: inherit;
+        font-size: 0.95rem;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface-2);
+        color: var(--text);
+        transition: border-color 0.2s, box-shadow 0.2s;
+        outline: none;
+      }
+
+      input[type="text"]:focus,
+      select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+      }
+
+      select {
+        cursor: pointer;
+        min-width: 90px;
+      }
+
+      .btn-add {
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 0.6rem 1.4rem;
+        border: none;
+        border-radius: 10px;
+        background: var(--primary);
+        color: #fff;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.1s;
+        white-space: nowrap;
+      }
+
+      .btn-add:hover {
+        background: var(--primary-dark);
+      }
+
+      .btn-add:active {
+        transform: scale(0.97);
+      }
+
+      /* Subject list */
+      .subject-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+      }
+
+      .subject-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.85rem 1rem;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        transition: border-color 0.2s;
+        animation: slideIn 0.25s ease-out;
+      }
+
+      .subject-item:hover {
+        border-color: var(--primary-light);
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .subject-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .subject-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .subject-meta {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+      }
+
+      .grade-badge {
+        font-weight: 700;
+        font-size: 0.9rem;
+        padding: 0.3rem 0.7rem;
+        border-radius: 8px;
+        min-width: 44px;
+        text-align: center;
+      }
+
+      .grade-badge.g-a  { background: var(--success-light); color: var(--success); }
+      .grade-badge.g-bp { background: #dbeafe; color: #2563eb; }
+      .grade-badge.g-b  { background: #dbeafe; color: #3b82f6; }
+      .grade-badge.g-cp { background: var(--warning-light); color: #b45309; }
+      .grade-badge.g-c  { background: var(--warning-light); color: #d97706; }
+      .grade-badge.g-dp { background: #fef3c7; color: #b45309; }
+      .grade-badge.g-d  { background: #fee2e2; color: #b91c1c; }
+      .grade-badge.g-f  { background: var(--error-light); color: var(--error); }
+
+      .btn-delete {
+        font-family: inherit;
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 0.4rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--error);
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s;
+        white-space: nowrap;
+      }
+
+      .btn-delete:hover {
+        background: var(--error-light);
+        border-color: var(--error);
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 2.5rem 1rem;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+      }
+
+      /* Target GPA Simulator */
+      .simulator-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .sim-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+
+      .sim-field label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      .sim-field .sim-value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 6px;
+        border-radius: 3px;
+        background: var(--border);
+        outline: none;
+        cursor: pointer;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--primary);
+        border: 3px solid #fff;
+        box-shadow: 0 1px 4px rgba(37, 99, 235, 0.4);
+        cursor: pointer;
+        transition: transform 0.15s;
+      }
+
+      input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.15);
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--primary);
+        border: 3px solid #fff;
+        box-shadow: 0 1px 4px rgba(37, 99, 235, 0.4);
+        cursor: pointer;
+      }
+
+      .sim-result {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1.25rem;
+        text-align: center;
+      }
+
+      .sim-result .sim-label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 0.4rem;
+      }
+
+      .sim-result .sim-number {
+        font-size: 2.2rem;
+        font-weight: 700;
+        line-height: 1.1;
+      }
+
+      .sim-result .sim-note {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        margin-top: 0.4rem;
+      }
+
+      .sim-result .sim-number.good   { color: var(--success); }
+      .sim-result .sim-number.warn   { color: var(--warning); }
+      .sim-result .sim-number.impossible { color: var(--error); }
+
+      /* Instructions */
+      .instructions {
+        background: var(--primary-light);
+        border: 1px solid #bfdbfe;
+        border-radius: var(--radius);
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.75rem;
+      }
+
+      .instructions h3 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 0.5rem;
+      }
+
+      .instructions ol {
+        padding-left: 1.3rem;
+        font-size: 0.88rem;
+        color: var(--text);
+        line-height: 1.7;
+      }
+
+      .instructions ol li {
+        margin-bottom: 0.2rem;
+      }
+
+      .instructions ol li::marker {
+        color: var(--primary);
+        font-weight: 700;
+      }
+
+      /* Responsive */
+      @media (max-width: 640px) {
+        .container {
+          padding: 1.25rem 1rem 3rem;
+        }
+
+        .header h1 {
+          font-size: 1.5rem;
+        }
+
+        .summary {
+          grid-template-columns: 1fr;
+        }
+
+        .form-row {
+          grid-template-columns: 1fr;
+          gap: 0.6rem;
+        }
+
+        .simulator-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .subject-item {
+          flex-wrap: wrap;
+        }
+
+        .grade-badge {
+          order: 3;
+        }
+
+        .btn-delete {
+          order: 4;
+        }
+      }
+    </style>
+    <meta property="og:image" content="https://bolt.new/static/og_default.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://bolt.new/static/og_default.png">
+</head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <h1>GPA Calculator</h1>
+        <p>คำนวณและวางแผนเกรดเฉลี่ย — กรอกวิชา ดูผลทันที และจำลองเป้าหมายเกรดเฉลี่ย</p>
+      </header>
+
+      <section class="instructions">
+        <h3>วิธีใช้งาน</h3>
+        <ol>
+          <li>กรอกชื่อวิชา เลือกหน่วยกิตและเกรด แล้วกด "เพิ่มวิชา"</li>
+          <li>ระบบจะคำนวณเกรดเฉลี่ยและหน่วยกิตสะสมให้ทันทีที่มีการเพิ่มหรือลบวิชา</li>
+          <li>ในส่วน "จำลองเป้าหมาย GPA" ปรับเลื่อนเพื่อดูว่าเทอมถัดไปต้องได้เกรดเฉลี่ยเท่าไหร่</li>
+        </ol>
+      </section>
+
+      <div class="summary">
+        <div class="summary-card">
+          <div class="label">เกรดเฉลี่ย (GPA)</div>
+          <div class="value" id="gpa-value">0.00</div>
+          <div class="sub" id="gpa-sub">ยังไม่มีวิชา</div>
+        </div>
+        <div class="summary-card">
+          <div class="label">หน่วยกิตสะสม</div>
+          <div class="value" id="credits-value">0</div>
+          <div class="sub" id="credits-sub">หน่วยกิต</div>
+        </div>
+      </div>
+
+      <section class="card">
+        <h2>เพิ่มรายวิชา</h2>
+        <form class="form-row" id="add-form">
+          <div class="field">
+            <label for="subject-name">ชื่อวิชา</label>
+            <input type="text" id="subject-name" placeholder="เช่น คณิตศาสตร์ 1" maxlength="60" />
+          </div>
+          <div class="field">
+            <label for="subject-credits">หน่วยกิต</label>
+            <select id="subject-credits">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="subject-grade">เกรด</label>
+            <select id="subject-grade">
+              <option value="A">A</option>
+              <option value="B+">B+</option>
+              <option value="B">B</option>
+              <option value="C+">C+</option>
+              <option value="C">C</option>
+              <option value="D+">D+</option>
+              <option value="D">D</option>
+              <option value="F">F</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-add">เพิ่มวิชา</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>รายการวิชา</h2>
+        <ul class="subject-list" id="subject-list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>จำลองเป้าหมาย GPA</h2>
+        <div class="simulator-grid">
+          <div class="sim-field">
+            <label for="target-gpa">เกรดเฉลี่ยสะสมที่ตั้งเป้า (Target GPA)</label>
+            <input type="range" id="target-gpa" min="0" max="4" step="0.05" value="3.5" />
+            <div class="sim-value" id="target-gpa-display">3.50</div>
+          </div>
+          <div class="sim-field">
+            <label for="next-credits">หน่วยกิตที่จะลงในเทอมถัดไป</label>
+            <input type="range" id="next-credits" min="1" max="25" step="1" value="18" />
+            <div class="sim-value" id="next-credits-display">18 หน่วยกิต</div>
+          </div>
+        </div>
+        <div class="sim-result">
+          <div class="sim-label">ต้องได้เกรดเฉลี่ยในเทอมถัดไปอย่างน้อย</div>
+          <div class="sim-number" id="needed-gpa">—</div>
+          <div class="sim-note" id="needed-note">เพิ่มวิชาก่อนเพื่อเริ่มจำลอง</div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+
+        const GRADE_POINTS = {
+          "A": 4.0,
+          "B+": 3.5,
+          "B": 3.0,
+          "C+": 2.5,
+          "C": 2.0,
+          "D+": 1.5,
+          "D": 1.0,
+          "F": 0.0
+        };
+
+        const GRADE_CLASS = {
+          "A": "g-a", "B+": "g-bp", "B": "g-b", "C+": "g-cp",
+          "C": "g-c", "D+": "g-dp", "D": "g-d", "F": "g-f"
+        };
+
+        const STORAGE_KEY = "gpa-calculator-subjects";
+
+        let subjects = [];
+
+        const form = document.getElementById("add-form");
+        const nameInput = document.getElementById("subject-name");
+        const creditsSelect = document.getElementById("subject-credits");
+        const gradeSelect = document.getElementById("subject-grade");
+        const listEl = document.getElementById("subject-list");
+        const gpaValueEl = document.getElementById("gpa-value");
+        const gpaSubEl = document.getElementById("gpa-sub");
+        const creditsValueEl = document.getElementById("credits-value");
+        const creditsSubEl = document.getElementById("credits-sub");
+
+        const targetGpaSlider = document.getElementById("target-gpa");
+        const targetGpaDisplay = document.getElementById("target-gpa-display");
+        const nextCreditsSlider = document.getElementById("next-credits");
+        const nextCreditsDisplay = document.getElementById("next-credits-display");
+        const neededGpaEl = document.getElementById("needed-gpa");
+        const neededNoteEl = document.getElementById("needed-note");
+
+        function loadSubjects() {
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) subjects = JSON.parse(raw);
+          } catch (e) {
+            subjects = [];
+          }
+        }
+
+        function saveSubjects() {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(subjects));
+          } catch (e) {}
+        }
+
+        function addSubject(name, credits, grade) {
+          subjects.push({
+            id: Date.now() + Math.random(),
+            name: name,
+            credits: credits,
+            grade: grade
+          });
+          saveSubjects();
+          render();
+        }
+
+        function deleteSubject(id) {
+          subjects = subjects.filter(function (s) { return s.id !== id; });
+          saveSubjects();
+          render();
+        }
+
+        function calculateGPA() {
+          var totalCredits = 0;
+          var totalPoints = 0;
+          subjects.forEach(function (s) {
+            totalCredits += s.credits;
+            totalPoints += GRADE_POINTS[s.grade] * s.credits;
+          });
+          var gpa = totalCredits > 0 ? totalPoints / totalCredits : 0;
+          return { gpa: gpa, totalCredits: totalCredits, totalPoints: totalPoints };
+        }
+
+        function renderSubjects() {
+          listEl.innerHTML = "";
+          if (subjects.length === 0) {
+            var empty = document.createElement("li");
+            empty.className = "empty-state";
+            empty.textContent = "ยังไม่มีวิชาในรายการ — เพิ่มวิชาด้านบนเพื่อเริ่มคำนวณ";
+            listEl.appendChild(empty);
+            return;
+          }
+          subjects.forEach(function (s) {
+            var li = document.createElement("li");
+            li.className = "subject-item";
+
+            var info = document.createElement("div");
+            info.className = "subject-info";
+
+            var name = document.createElement("div");
+            name.className = "subject-name";
+            name.textContent = s.name;
+
+            var meta = document.createElement("div");
+            meta.className = "subject-meta";
+            meta.textContent = s.credits + " หน่วยกิต • คะแนน " + GRADE_POINTS[s.grade].toFixed(1);
+
+            info.appendChild(name);
+            info.appendChild(meta);
+
+            var badge = document.createElement("span");
+            badge.className = "grade-badge " + GRADE_CLASS[s.grade];
+            badge.textContent = s.grade;
+
+            var delBtn = document.createElement("button");
+            delBtn.className = "btn-delete";
+            delBtn.textContent = "ลบ";
+            delBtn.addEventListener("click", function () {
+              deleteSubject(s.id);
+            });
+
+            li.appendChild(info);
+            li.appendChild(badge);
+            li.appendChild(delBtn);
+            listEl.appendChild(li);
+          });
+        }
+
+        function renderSummary() {
+          var data = calculateGPA();
+          gpaValueEl.textContent = data.totalCredits > 0 ? data.gpa.toFixed(2) : "0.00";
+          gpaSubEl.textContent = data.totalCredits > 0
+            ? "จาก " + subjects.length + " วิชา"
+            : "ยังไม่มีวิชา";
+          creditsValueEl.textContent = data.totalCredits;
+          creditsSubEl.textContent = "หน่วยกิต";
+        }
+
+        function renderSimulator() {
+          var targetGpa = parseFloat(targetGpaSlider.value);
+          var nextCredits = parseInt(nextCreditsSlider.value, 10);
+
+          targetGpaDisplay.textContent = targetGpa.toFixed(2);
+          nextCreditsDisplay.textContent = nextCredits + " หน่วยกิต";
+
+          var data = calculateGPA();
+
+          if (data.totalCredits === 0) {
+            neededGpaEl.textContent = "—";
+            neededGpaEl.className = "sim-number";
+            neededNoteEl.textContent = "เพิ่มวิชาก่อนเพื่อเริ่มจำลอง";
+            return;
+          }
+
+          var neededPoints = targetGpa * (data.totalCredits + nextCredits) - data.totalPoints;
+          var neededGpa = neededPoints / nextCredits;
+
+          if (neededGpa <= 0) {
+            neededGpaEl.textContent = "0.00";
+            neededGpaEl.className = "sim-number good";
+            neededNoteEl.textContent = "เกรดเฉลี่ยสะสมปัจจุบันสูงกว่าเป้าหมายอยู่แล้ว — แค่ไม่ตกก็พอ";
+          } else if (neededGpa > 4.0) {
+            neededGpaEl.textContent = neededGpa.toFixed(2);
+            neededGpaEl.className = "sim-number impossible";
+            neededNoteEl.textContent = "เกิน 4.00 — ไม่สามารถทำได้ ลองลดเป้าหมายหรือเพิ่มหน่วยกิต";
+          } else if (neededGpa >= 3.5) {
+            neededGpaEl.textContent = neededGpa.toFixed(2);
+            neededGpaEl.className = "sim-number warn";
+            neededNoteEl.textContent = "ต้องตั้งใจมาก — เกรดเฉลี่ยที่ต้องการค่อนข้างสูง";
+          } else {
+            neededGpaEl.textContent = neededGpa.toFixed(2);
+            neededGpaEl.className = "sim-number good";
+            neededNoteEl.textContent = "เป้าหมายเป็นไปได้ — สู้ต่อไป";
+          }
+        }
+
+        function render() {
+          renderSubjects();
+          renderSummary();
+          renderSimulator();
+        }
+
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          var name = nameInput.value.trim();
+          if (!name) {
+            nameInput.focus();
+            return;
+          }
+          var credits = parseInt(creditsSelect.value, 10);
+          var grade = gradeSelect.value;
+          addSubject(name, credits, grade);
+          nameInput.value = "";
+          nameInput.focus();
+        });
+
+        targetGpaSlider.addEventListener("input", renderSimulator);
+        nextCreditsSlider.addEventListener("input", renderSimulator);
+
+        loadSubjects();
+        render();
+      })();
+    </script>
+  </body>
+</html>
